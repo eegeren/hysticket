@@ -1,9 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
 const allowedFields = ["status", "priority", "assigned_to", "resolution_note", "close_code"] as const;
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
   const adminPassword = req.headers.get("x-admin-password") || "";
   if (!process.env.ADMIN_PASSWORD || adminPassword !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const ticketId = params.id;
+  const ticketId = id;
   const { data, error } = await supabaseServer
     .from("tickets")
     .update(updates)
