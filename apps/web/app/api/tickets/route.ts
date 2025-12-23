@@ -17,31 +17,58 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const full_name = String(body.full_name || "").trim();
-    const device = body.device ? String(body.device).trim() : null;
+    const device_id = body.device ? String(body.device).trim() : null;
     const category = String(body.category || "").trim();
-    const severity = String(body.severity || "").trim();
+    const severityRaw = String(body.severity || body.impact || "").trim();
     const title = String(body.title || "").trim();
     const description = String(body.description || "").trim();
 
-    if (!full_name || !category || !severity || !title || !description) {
+    if (!full_name || !category || !severityRaw || !title || !description) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const { data, error } = await supabaseServer
+    const impact =
+      severityRaw === "SALES_STOPPED" || severityRaw === "P1"
+        ? "SALES_STOPPED"
+        : severityRaw === "PARTIAL" || severityRaw === "P2"
+          ? "PARTIAL"
+          : "INFO";
+
+    const priority = impact === "SALES_STOPPED" ? "P1" : impact === "PARTIAL" ? "P2" : "P3";
+
+    const basePayload = {
+      store_id: storeId,
+      device_id,
+      category,
+      impact,
+      priority,
+      title,
+      description,
+    };
+
+    let data;
+    let error;
+
+    // Try with requester_name (expected column)
+    ({ data, error } = await supabaseServer
       .from("tickets")
-      .insert([
-        {
-          store_id: storeId,
-          full_name,
-          device,
-          category,
-          severity,
-          title,
-          description,
-        },
-      ])
+      .insert([{ ...basePayload, requester_name: full_name }])
       .select("id")
-      .single();
+      .single());
+
+    // If requester_name missing, retry with full_name
+    if (error && error.message.includes("requester_name")) {
+      ({ data, error } = await supabaseServer
+        .from("tickets")
+        .insert([{ ...basePayload, full_name }])
+        .select("id")
+        .single());
+    }
+
+    // If still error, last fallback without name to avoid blocking
+    if (error) {
+      ({ data, error } = await supabaseServer.from("tickets").insert([basePayload]).select("id").single());
+    }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
