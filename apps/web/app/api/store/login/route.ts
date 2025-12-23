@@ -10,15 +10,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "storeId required" }, { status: 400 });
   }
 
-  // İstersen burada storeId'yi Supabase stores tablosuna göre doğrula (is_active vs.)
   const token = await signStoreToken({ storeId });
 
-  cookies().set("hys_store", token, {
+  const cookieStore = await cookies();
+  cookieStore.set("hys_store", token, {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 gün
+    maxAge: 60 * 60 * 24 * 30,
   });
 
   return NextResponse.json({ ok: true });
