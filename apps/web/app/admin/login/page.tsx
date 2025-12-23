@@ -46,13 +46,19 @@ function AdminLoginContent() {
 
     setSubmitting(true);
     try {
-      const res = await apiFetch<AdminLoginResponse>("/auth/admin/login", {
+      const res = await fetch("/api/admin/login", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: p }),
       });
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(text || "Giriş başarısız");
+      }
+      const data = text ? (JSON.parse(text) as AdminLoginResponse) : { token: "" };
 
       // Token'ı cookie'ye yaz (client-side; MVP için yeterli)
-      setTokenCookie(res.token, { role: "admin" });
+      setTokenCookie(data.token, { role: "admin" });
 
       router.replace(nextPath);
     } catch (err: any) {
