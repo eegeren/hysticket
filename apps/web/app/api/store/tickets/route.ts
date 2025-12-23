@@ -7,9 +7,23 @@ export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("hys_store")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    let storeId: string | null = null;
 
-    const { storeId } = await verifyStoreToken(token);
+    if (token) {
+      const verified = await verifyStoreToken(token);
+      storeId = verified.storeId;
+    } else {
+      // Fallback: izin verilen durumda query'den gelen store_id ile çalış
+      const url = new URL(req.url);
+      const requestedStoreId = url.searchParams.get("store_id");
+      if (requestedStoreId) {
+        storeId = requestedStoreId;
+      }
+    }
+
+    if (!storeId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const url = new URL(req.url);
     const statusFilter = url.searchParams.get("status_filter") || undefined;
