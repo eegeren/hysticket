@@ -12,10 +12,6 @@ export async function GET(req: Request) {
     const { storeId } = await verifyStoreToken(token);
 
     const url = new URL(req.url);
-    const requestedStoreId = url.searchParams.get("store_id");
-    if (requestedStoreId && requestedStoreId !== storeId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
     const statusFilter = url.searchParams.get("status_filter") || undefined;
 
     const query = supabaseServer.from("tickets").select("*").eq("store_id", storeId).order("created_at", { ascending: false });

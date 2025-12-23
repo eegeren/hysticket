@@ -13,11 +13,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     const { storeId } = await verifyStoreToken(token);
 
     const url = new URL(req.url);
-    const requestedStoreId = url.searchParams.get("store_id");
-    if (requestedStoreId && requestedStoreId !== storeId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
     const { data, error } = await supabaseServer
       .from("tickets")
       .select("*")
