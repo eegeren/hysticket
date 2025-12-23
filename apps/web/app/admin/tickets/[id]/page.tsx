@@ -11,6 +11,8 @@ type Priority = "P1" | "P2" | "P3" | "P4";
 type Ticket = {
   id: string;
   store_id: string;
+  requester_name?: string | null;
+  full_name?: string | null;
   title: string;
   description: string;
   category: string;
@@ -170,6 +172,14 @@ export default function AdminTicketDetailPage() {
             <span className="inline-flex items-center gap-2 rounded-lg border border-sky-300/40 bg-sky-400/10 px-3 py-1 text-sky-100">
               Öncelik: {ticket.priority}
             </span>
+            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-300/30 bg-slate-200/10 px-3 py-1 text-slate-100">
+              Etki: {ticket.impact}
+            </span>
+            {(ticket.requester_name || ticket.full_name) && (
+              <span className="inline-flex items-center gap-2 rounded-lg border border-slate-300/30 bg-slate-200/10 px-3 py-1 text-slate-100">
+                Açan: {ticket.requester_name || ticket.full_name}
+              </span>
+            )}
           </div>
         </div>
 

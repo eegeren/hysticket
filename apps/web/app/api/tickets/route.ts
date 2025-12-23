@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const full_name = String(body.full_name || "").trim();
-    const device = body.device ? String(body.device).trim() : null;
+    const device_id = body.device ? String(body.device).trim() : null;
     const category = String(body.category || "").trim();
     const severityRaw = String(body.severity || body.impact || "").trim();
     const title = String(body.title || "").trim();
@@ -41,8 +41,8 @@ export async function POST(req: Request) {
       .insert([
         {
           store_id: storeId,
-          requester_name: full_name,
-          device,
+          full_name,
+          device_id,
           category,
           impact,
           priority,
