@@ -78,7 +78,7 @@ export default function NewTicket() {
       router.push("/store/tickets");
     } catch (e: any) {
       console.error("TICKET CREATE FAILED:", e);
-      setError(e?.message ?? "Load failed");
+      setError(e?.message ?? String(e));
     }
   };
 
