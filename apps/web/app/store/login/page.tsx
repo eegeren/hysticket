@@ -11,14 +11,14 @@ export default function StoreLogin() {
     e.preventDefault();
     setError(null);
     try {
-      const resp = await fetch("/api/store/login", {
+      const res = await fetch("/api/store/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ storeId }),
       });
-      if (!resp.ok) {
-        const data = await resp.json().catch(() => ({}));
-        throw new Error(data.error || "Giriş başarısız");
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t);
       }
       window.location.href = "/store/tickets";
     } catch (err: any) {
