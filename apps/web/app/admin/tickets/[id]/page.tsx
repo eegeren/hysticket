@@ -10,6 +10,7 @@ type Priority = "P1" | "P2" | "P3" | "P4";
 
 type Ticket = {
   id: string;
+  store_id: string;
   title: string;
   description: string;
   category: string;
