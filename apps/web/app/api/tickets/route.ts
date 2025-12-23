@@ -17,24 +17,15 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const full_name = String(body.full_name || "").trim();
-    const device_id = body.device ? String(body.device).trim() : null;
+    const device = body.device ? String(body.device).trim() : null;
     const category = String(body.category || "").trim();
-    const severityRaw = String(body.severity || body.impact || "").trim();
+    const severity = String(body.severity || "").trim();
     const title = String(body.title || "").trim();
     const description = String(body.description || "").trim();
 
-    if (!full_name || !category || !severityRaw || !title || !description) {
+    if (!full_name || !category || !severity || !title || !description) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-
-    const impact =
-      severityRaw === "SALES_STOPPED" || severityRaw === "P1"
-        ? "SALES_STOPPED"
-        : severityRaw === "PARTIAL" || severityRaw === "P2"
-          ? "PARTIAL"
-          : "INFO";
-
-    const priority = impact === "SALES_STOPPED" ? "P1" : impact === "PARTIAL" ? "P2" : "P3";
 
     const { data, error } = await supabaseServer
       .from("tickets")
@@ -42,10 +33,9 @@ export async function POST(req: Request) {
         {
           store_id: storeId,
           full_name,
-          device_id,
+          device,
           category,
-          impact,
-          priority,
+          severity,
           title,
           description,
         },
