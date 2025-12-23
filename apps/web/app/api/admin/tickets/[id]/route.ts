@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 
+export const runtime = "nodejs";
+
 const allowedFields = ["status", "priority", "assigned_to", "resolution_note", "close_code"] as const;
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
