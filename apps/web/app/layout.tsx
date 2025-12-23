@@ -1,5 +1,6 @@
 ﻿import "./globals.css";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "HYS Köroğlu Arıza Kayıtları",
@@ -27,12 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="flex items-center justify-between">
             <div className="text-xl font-bold">HYS Köroğlu Arıza Kayıtları</div>
             <div className="flex items-center gap-4 text-sm">
-              <a href="/store/tickets" className="text-accent">
+              <Link href="/store/tickets" className="text-accent">
                 Mağaza Ticketları
-              </a>
-              <a href="/admin/tickets" className="text-accent">
+              </Link>
+              <Link href="/admin/tickets" className="text-accent">
                 Admin
-              </a>
+              </Link>
             </div>
           </header>
           {children}
