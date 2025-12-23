@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "../../../lib/api";
 import type { Ticket, Status } from "../../../lib/types";
 import { STORES } from "@/lib/stores";
 
@@ -53,10 +52,13 @@ export default function StoreTickets() {
     params.set("store_id", storeId);
     const query = params.toString() ? `?${params.toString()}` : "";
     try {
-      const data = await apiFetch<Ticket[]>(`/tickets${query}`);
+      const res = await fetch(`/api/store/tickets${query}`, { cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+      const data = text ? (JSON.parse(text) as Ticket[]) : [];
       setTickets(data);
     } catch (err: any) {
-      setError(err.message || "Liste alınamadı");
+      setError(err?.message ?? String(err));
     }
   };
 

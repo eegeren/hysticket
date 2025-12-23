@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { apiFetch, API_URL } from "../../../../lib/api";
 import type { Ticket } from "../../../../lib/types";
 
 const statusStyles: Record<string, { bg: string; color: string; border: string; label: string }> = {
@@ -54,10 +53,13 @@ function TicketDetailContent() {
   const load = async () => {
     if (!ticketId || !storeId) return;
     try {
-      const data = await apiFetch<Ticket>(`/tickets/${ticketId}?store_id=${storeId}`);
+      const res = await fetch(`/api/store/tickets/${ticketId}?store_id=${storeId}`, { cache: "no-store" });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+      const data = text ? (JSON.parse(text) as Ticket) : null;
       setTicket(data);
     } catch (err: any) {
-      setError(err.message || "Yüklenemedi");
+      setError(err?.message ?? String(err));
     }
   };
 
@@ -72,7 +74,7 @@ function TicketDetailContent() {
     const form = new FormData();
     form.append("file", file);
     try {
-      await fetch(`${API_URL}/tickets/${ticketId}/attachments?store_id=${storeId}`, {
+      await fetch(`/api/store/tickets/${ticketId}/attachments?store_id=${storeId}`, {
         method: "POST",
         body: form,
       }).then((resp) => {
@@ -207,7 +209,7 @@ function TicketDetailContent() {
                   <a
                     key={a.id}
                     style={{ display: "flex", justifyContent: "space-between", color: "#e2e8f0", fontSize: "14px" }}
-                    href={`${API_URL}${a.url}`}
+                    href={a.url}
                     target="_blank"
                     rel="noreferrer"
                   >
