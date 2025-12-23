@@ -81,9 +81,10 @@ export async function POST(req: Request) {
           metadata: { ticketId: data.id },
         },
       ]);
+      return NextResponse.json({ ok: true, ticketId: data.id });
     }
 
-    return NextResponse.json({ ok: true, ticketId: data.id });
+    return NextResponse.json({ ok: true, ticketId: null });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
   }
