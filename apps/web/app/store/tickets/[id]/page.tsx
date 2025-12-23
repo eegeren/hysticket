@@ -50,9 +50,19 @@ function TicketDetailContent() {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const setStoreSession = async (store: string) => {
+    await fetch("/api/store/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storeId: store }),
+      credentials: "include",
+    });
+  };
+
   const load = async () => {
     if (!ticketId || !storeId) return;
     try {
+      await setStoreSession(storeId);
       const res = await fetch(`/api/store/tickets/${ticketId}?store_id=${storeId}`, { cache: "no-store" });
       const text = await res.text();
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 300)}`);

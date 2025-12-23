@@ -39,11 +39,22 @@ export default function NewTicket() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const setStoreSession = async (store: string) => {
+    if (!store) return;
+    await fetch("/api/store/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ storeId: store }),
+    });
+  };
+
   useEffect(() => {
     if (!storeId) {
       setDevices([]);
       return;
     }
+    setStoreSession(storeId).catch(() => {});
     apiFetch<Device[]>(`/stores/${storeId}/devices`).then(setDevices).catch(() => setDevices([]));
   }, [storeId]);
 
@@ -54,6 +65,7 @@ export default function NewTicket() {
       const full_name = requesterName;
       const device = deviceId || null;
       const severity = impact;
+      await setStoreSession(storeId);
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
