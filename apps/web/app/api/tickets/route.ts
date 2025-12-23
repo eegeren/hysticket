@@ -72,14 +72,16 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    await supabaseServer.from("audit_logs").insert([
-      {
-        store_id: storeId,
-        action: "ticket_create",
-        path: "/store/tickets/new",
-        metadata: { ticketId: data.id },
-      },
-    ]);
+    if (data?.id) {
+      await supabaseServer.from("audit_logs").insert([
+        {
+          store_id: storeId,
+          action: "ticket_create",
+          path: "/store/tickets/new",
+          metadata: { ticketId: data.id },
+        },
+      ]);
+    }
 
     return NextResponse.json({ ok: true, ticketId: data.id });
   } catch (e: any) {
