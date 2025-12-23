@@ -25,6 +25,14 @@ type Ticket = {
 const statuses: Status[] = ["OPEN", "IN_PROGRESS", "WAITING_STORE", "RESOLVED", "CLOSED"];
 const priorities: Priority[] = ["P1", "P2", "P3", "P4"];
 
+const statusLabelMap: Record<Status, string> = {
+  OPEN: "Açık",
+  IN_PROGRESS: "Kabul edildi",
+  WAITING_STORE: "Mağaza beklemede",
+  RESOLVED: "Çözüldü",
+  CLOSED: "Kapalı",
+};
+
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
   const text = await res.text();
@@ -157,7 +165,7 @@ export default function AdminTicketDetailPage() {
           </div>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
             <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-emerald-100">
-              Durum: {ticket.status}
+              Durum: {statusLabelMap[ticket.status] ?? ticket.status}
             </span>
             <span className="inline-flex items-center gap-2 rounded-lg border border-sky-300/40 bg-sky-400/10 px-3 py-1 text-sky-100">
               Öncelik: {ticket.priority}
@@ -190,7 +198,7 @@ export default function AdminTicketDetailPage() {
 
         <div className="rounded-2xl border p-4 space-y-4">
           <label className="text-sm block">
-            Status
+            Durum
             <select
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={status}
@@ -198,14 +206,14 @@ export default function AdminTicketDetailPage() {
             >
               {statuses.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {statusLabelMap[s] ?? s}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="text-sm block">
-            Priority
+            Öncelik
             <select
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={priority}
