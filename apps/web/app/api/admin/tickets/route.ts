@@ -9,6 +9,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: "Supabase env vars missing" }, { status: 500 });
+  }
+
   const { data, error } = await supabaseServer
     .from("tickets")
     .select("id, store_id, title, category, impact, priority, status, created_at")
