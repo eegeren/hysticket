@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "../../../../lib/api";
-import type { Category, Impact, Device, Store } from "../../../../lib/types";
+import type { Category, Impact, Device } from "../../../../lib/types";
+import { STORES } from "@/lib/stores";
 
 const categories: { value: Category; label: string }[] = [
   { value: "INTERNET_WAN", label: "İnternet / WAN" },
@@ -35,13 +36,8 @@ export default function NewTicket() {
   const [storeId, setStoreId] = useState("");
   const [deviceId, setDeviceId] = useState<string>("");
   const [devices, setDevices] = useState<Device[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    apiFetch<Store[]>("/admin/stores").then(setStores).catch(() => setStores([]));
-  }, []);
 
   useEffect(() => {
     if (!storeId) {
@@ -99,9 +95,9 @@ export default function NewTicket() {
                 </label>
                 <select className={inputClasses} value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
                   <option value="">Mağaza seçin</option>
-                  {stores.map((s) => (
+                  {STORES.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.code})
+                      {s.id} — {s.name}
                     </option>
                   ))}
                 </select>

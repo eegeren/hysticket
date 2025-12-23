@@ -1,26 +1,26 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { apiFetch } from "../../../lib/api";
-import { setToken } from "../../../lib/auth";
+import { STORES } from "@/lib/stores";
 
 export default function StoreLogin() {
-  const [code, setCode] = useState("");
-  const [pin, setPin] = useState("");
+  const [storeId, setStoreId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      const { token } = await apiFetch<{ token: string }>("/auth/store/login", {
+      const resp = await fetch("/api/store/login", {
         method: "POST",
-        body: JSON.stringify({ code, pin }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId }),
       });
-      setToken(token);
-      router.push("/store/tickets");
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.error || "Giriş başarısız");
+      }
+      window.location.href = "/store/tickets";
     } catch (err: any) {
       setError(err.message || "Giriş başarısız");
     }
@@ -31,16 +31,21 @@ export default function StoreLogin() {
       <h1 className="text-2xl font-semibold mb-4">Mağaza Girişi</h1>
       <form onSubmit={submit} className="space-y-3">
         <div>
-          <label className="block text-sm mb-1">Store Code</label>
-          <input value={code} onChange={(e) => setCode(e.target.value)} required />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">PIN</label>
-          <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} required />
+          <label className="block text-sm mb-1">Mağaza</label>
+          <select value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
+            <option value="" disabled>
+              Mağaza seç
+            </option>
+            {STORES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.id} — {s.name}
+              </option>
+            ))}
+          </select>
         </div>
         {error && <div className="text-red-400 text-sm">{error}</div>}
-        <button className="btn-primary w-full" type="submit">
-          Giriş Yap
+        <button className="btn-primary w-full" type="submit" disabled={!storeId}>
+          Devam
         </button>
       </form>
     </div>

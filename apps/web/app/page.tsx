@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
-import type { Category, Device, Impact, Store } from "../lib/types";
+import { STORES } from "@/lib/stores";
+import type { Category, Device, Impact } from "../lib/types";
 
 const categories: { value: Category; label: string }[] = [
   { value: "INTERNET_WAN", label: "İnternet / WAN" },
@@ -34,13 +35,8 @@ export default function Home() {
   const [storeId, setStoreId] = useState("");
   const [deviceId, setDeviceId] = useState<string>("");
   const [devices, setDevices] = useState<Device[]>([]);
-  const [stores, setStores] = useState<Store[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    apiFetch<Store[]>("/admin/stores").then(setStores).catch(() => setStores([]));
-  }, []);
 
   useEffect(() => {
     if (!storeId) {
@@ -103,9 +99,9 @@ export default function Home() {
                 </label>
                 <select className={inputClasses} value={storeId} onChange={(e) => setStoreId(e.target.value)} required>
                   <option value="">Mağaza seçin</option>
-                  {stores.map((s) => (
+                  {STORES.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.code})
+                      {s.id} — {s.name}
                     </option>
                   ))}
                 </select>

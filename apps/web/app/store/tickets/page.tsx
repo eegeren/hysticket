@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "../../../lib/api";
-import type { Ticket, Status, Store } from "../../../lib/types";
+import type { Ticket, Status } from "../../../lib/types";
+import { STORES } from "@/lib/stores";
 
 const statuses: Status[] = ["OPEN", "IN_PROGRESS", "WAITING_STORE", "RESOLVED", "CLOSED"];
 const statusLabels: Record<Status, string> = {
@@ -39,7 +40,6 @@ export default function StoreTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [status, setStatus] = useState<string>("");
   const [storeId, setStoreId] = useState<string>("");
-  const [stores, setStores] = useState<Store[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -59,10 +59,6 @@ export default function StoreTickets() {
       setError(err.message || "Liste alınamadı");
     }
   };
-
-  useEffect(() => {
-    apiFetch<Store[]>("/admin/stores").then(setStores).catch(() => setStores([]));
-  }, []);
 
   useEffect(() => {
     load();
@@ -87,9 +83,9 @@ export default function StoreTickets() {
             <label className="text-sm block mb-1">Mağaza</label>
             <select value={storeId} onChange={(e) => setStoreId(e.target.value)}>
               <option value="">Seçin</option>
-              {stores.map((s) => (
+              {STORES.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name} ({s.code})
+                  {s.id} — {s.name}
                 </option>
               ))}
             </select>
