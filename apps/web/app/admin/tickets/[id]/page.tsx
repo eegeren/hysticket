@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getAdminSecret } from "@/lib/auth";
+import { STORES } from "@/lib/stores";
 
 type Status = "OPEN" | "IN_PROGRESS" | "WAITING_STORE" | "RESOLVED" | "CLOSED";
 type Priority = "P1" | "P2" | "P3" | "P4";
@@ -143,12 +144,24 @@ export default function AdminTicketDetailPage() {
 
   if (!ticket) return <div className="p-6">Ticket bulunamadı.</div>;
 
+  const store = STORES.find((s) => s.id === ticket.store_id);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Ticket Detay</h1>
-          <div className="mt-1 text-sm text-slate-600 font-mono">{ticket.id}</div>
+          <h1 className="text-2xl font-semibold text-slate-100">Ticket Detay</h1>
+          <div className="mt-1 text-sm text-slate-400">
+            {store ? `${store.name} (${store.id})` : ticket.store_id}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-emerald-100">
+              Durum: {ticket.status}
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-lg border border-sky-300/40 bg-sky-400/10 px-3 py-1 text-sky-100">
+              Öncelik: {ticket.priority}
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-2">
