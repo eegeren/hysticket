@@ -8,19 +8,15 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     const { id } = await ctx.params;
     const cookieStore = await cookies();
     const token = cookieStore.get("hys_store")?.value;
-    let storeId: string | null = null;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (token) {
-      const verified = await verifyStoreToken(token);
-      storeId = verified.storeId;
-    } else {
-      const url = new URL(req.url);
-      const requestedStoreId = url.searchParams.get("store_id");
-      if (requestedStoreId) {
-        storeId = requestedStoreId;
-      }
+    const { storeId } = await verifyStoreToken(token);
+
+    const url = new URL(req.url);
+    const requestedStoreId = url.searchParams.get("store_id");
+    if (requestedStoreId && requestedStoreId !== storeId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    if (!storeId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data, error } = await supabaseServer
       .from("tickets")

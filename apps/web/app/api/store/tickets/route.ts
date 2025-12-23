@@ -7,25 +7,15 @@ export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("hys_store")?.value;
-    let storeId: string | null = null;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (token) {
-      const verified = await verifyStoreToken(token);
-      storeId = verified.storeId;
-    } else {
-      // Fallback: izin verilen durumda query'den gelen store_id ile çalış
-      const url = new URL(req.url);
-      const requestedStoreId = url.searchParams.get("store_id");
-      if (requestedStoreId) {
-        storeId = requestedStoreId;
-      }
-    }
-
-    if (!storeId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { storeId } = await verifyStoreToken(token);
 
     const url = new URL(req.url);
+    const requestedStoreId = url.searchParams.get("store_id");
+    if (requestedStoreId && requestedStoreId !== storeId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const statusFilter = url.searchParams.get("status_filter") || undefined;
 
     const query = supabaseServer.from("tickets").select("*").eq("store_id", storeId).order("created_at", { ascending: false });
