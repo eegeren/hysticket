@@ -87,37 +87,41 @@ export default function AdminTicketsListPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Admin Ticketları</h1>
-          <p className="text-sm text-slate-500">Son ticket kayıtları</p>
+          <h1 className="text-2xl font-semibold text-slate-100">Admin Ticketları</h1>
+          <p className="text-sm text-slate-400">Son ticket kayıtları</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-white/70 p-4 shadow-sm">
-        <div className="grid grid-cols-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-slate-900/30 backdrop-blur">
+        <div className="grid grid-cols-[2fr,1fr,1fr,1fr,1.5fr] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400 border-b border-slate-800">
           <div>ID</div>
           <div>Mağaza</div>
           <div>Status</div>
           <div>Öncelik</div>
           <div>Oluşturma</div>
         </div>
-        <div className="divide-y">
-          {tickets.map((t) => (
+        <div className="divide-y divide-slate-800/70">
+          {tickets.map((t, idx) => (
             <Link
               key={t.id}
               href={`/admin/tickets/${t.id}`}
-              className="grid grid-cols-5 py-3 text-sm hover:bg-slate-100 transition"
+              className={`grid grid-cols-[2fr,1fr,1fr,1fr,1.5fr] px-4 py-3 text-sm transition hover:bg-slate-800/60 ${
+                idx % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/20"
+              }`}
             >
-              <span className="font-mono text-xs">{t.id}</span>
-              <span>{t.store_id}</span>
-              <span>{statusLabels[t.status] ?? t.status}</span>
-              <span>{priorityLabels[t.priority] ?? t.priority}</span>
-              <span>{t.created_at ? new Date(t.created_at).toLocaleString() : "-"}</span>
+              <span className="font-mono text-xs text-slate-200 truncate">{t.id}</span>
+              <span className="text-slate-100">{t.store_id}</span>
+              <span className="text-emerald-200">{statusLabels[t.status] ?? t.status}</span>
+              <span className="text-sky-200">{priorityLabels[t.priority] ?? t.priority}</span>
+              <span className="text-slate-300">{t.created_at ? new Date(t.created_at).toLocaleString() : "-"}</span>
             </Link>
           ))}
-          {tickets.length === 0 && <div className="py-4 text-sm text-slate-500">Kayıt bulunamadı.</div>}
+          {tickets.length === 0 && (
+            <div className="px-4 py-6 text-sm text-slate-400">Kayıt bulunamadı.</div>
+          )}
         </div>
       </div>
     </div>
