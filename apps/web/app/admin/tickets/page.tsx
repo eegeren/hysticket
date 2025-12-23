@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { API_URL } from "@/lib/api";
 import { getAdminSecret } from "@/lib/auth";
 
 type Status = "OPEN" | "IN_PROGRESS" | "WAITING_STORE" | "RESOLVED" | "CLOSED";
@@ -66,7 +65,11 @@ export default function AdminTicketDetailPage() {
   const [closeCode, setCloseCode] = useState("");
 
   useEffect(() => {
-    if (!ticketId) return;
+    if (!ticketId) {
+      setLoading(false);
+      setErr("Ticket ID bulunamadı.");
+      return;
+    }
 
     const token = getAdminSecret();
     if (!token) {
@@ -78,8 +81,8 @@ export default function AdminTicketDetailPage() {
       setLoading(true);
       setErr(null);
       try {
-        const t = await fetchJson<Ticket>(`${API_URL}/tickets/${ticketId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const t = await fetchJson<Ticket>(`/api/tickets/${ticketId}`, {
+          headers: { "X-Admin-Password": token },
           cache: "no-store",
         });
 
@@ -117,11 +120,11 @@ export default function AdminTicketDetailPage() {
         close_code: closeCode || null,
       };
 
-      const updated = await fetchJson<Ticket>(`${API_URL}/admin/tickets/${ticketId}`, {
+      const updated = await fetchJson<Ticket>(`/api/admin/tickets/${ticketId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "X-Admin-Password": token,
         },
         body: JSON.stringify(payload),
       });

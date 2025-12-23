@@ -56,7 +56,11 @@ export default function AdminTicketDetailPage() {
   const [resolutionNote, setResolutionNote] = useState("");
 
   useEffect(() => {
-    if (!ticketId) return;
+    if (!ticketId) {
+      setLoading(false);
+      setError("Ticket ID bulunamadı.");
+      return;
+    }
 
     const token = getAdminSecret();
     if (!token) {
