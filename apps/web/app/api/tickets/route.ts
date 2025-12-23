@@ -36,55 +36,35 @@ export async function POST(req: Request) {
 
     const priority = impact === "SALES_STOPPED" ? "P1" : impact === "PARTIAL" ? "P2" : "P3";
 
-    const basePayload = {
-      store_id: storeId,
-      device_id,
-      category,
-      impact,
-      priority,
-      title,
-      description,
-    };
-
-    let data;
-    let error;
-
-    // Try with requester_name (expected column)
-    ({ data, error } = await supabaseServer
+    const { data, error } = await supabaseServer
       .from("tickets")
-      .insert([{ ...basePayload, requester_name: full_name }])
-      .select("id")
-      .single());
-
-    // If requester_name missing, retry with full_name
-    if (error && error.message.includes("requester_name")) {
-      ({ data, error } = await supabaseServer
-        .from("tickets")
-        .insert([{ ...basePayload, full_name }])
-        .select("id")
-        .single());
-    }
-
-    // If still error, last fallback without name to avoid blocking
-    if (error) {
-      ({ data, error } = await supabaseServer.from("tickets").insert([basePayload]).select("id").single());
-    }
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    if (data?.id) {
-      await supabaseServer.from("audit_logs").insert([
+      .insert([
         {
           store_id: storeId,
-          action: "ticket_create",
-          path: "/store/tickets/new",
-          metadata: { ticketId: data.id },
+          requester_name: full_name,
+          device_id,
+          category,
+          impact,
+          priority,
+          title,
+          description,
         },
-      ]);
-      return NextResponse.json({ ok: true, ticketId: data.id });
-    }
+      ])
+      .select("id")
+      .single();
 
-    return NextResponse.json({ ok: true, ticketId: null });
+    if (error || !data) return NextResponse.json({ error: error?.message || "Insert failed" }, { status: 500 });
+
+    await supabaseServer.from("audit_logs").insert([
+      {
+        store_id: storeId,
+        action: "ticket_create",
+        path: "/store/tickets/new",
+        metadata: { ticketId: data.id },
+      },
+    ]);
+
+    return NextResponse.json({ ok: true, ticketId: data.id });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
   }
