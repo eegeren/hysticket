@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { API_URL } from "@/lib/api";
 import { getAdminSecret } from "@/lib/auth";
 
 type Status = "OPEN" | "IN_PROGRESS" | "WAITING_STORE" | "RESOLVED" | "CLOSED";
@@ -69,8 +68,8 @@ export default function AdminTicketDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const t = await fetchJson<Ticket>(`${API_URL}/tickets/${ticketId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const t = await fetchJson<Ticket>(`/api/tickets/${ticketId}`, {
+          headers: { "X-Admin-Password": token },
           cache: "no-store",
         });
 
@@ -97,17 +96,17 @@ export default function AdminTicketDetailPage() {
       return;
     }
 
-    setSaving(true);
-    setError(null);
-    try {
-      const updated = await fetchJson<Ticket>(`${API_URL}/admin/tickets/${ticketId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          status,
+      setSaving(true);
+      setError(null);
+      try {
+        const updated = await fetchJson<Ticket>(`/api/admin/tickets/${ticketId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Password": token,
+          },
+          body: JSON.stringify({
+            status,
           priority,
           assigned_to: assignedTo || null,
           close_code: closeCode || null,
