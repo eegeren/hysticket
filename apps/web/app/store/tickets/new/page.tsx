@@ -51,23 +51,34 @@ export default function NewTicket() {
     e.preventDefault();
     setError(null);
     try {
+      const full_name = requesterName;
+      const device = deviceId || null;
+      const severity = impact;
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: requesterName,
-          device: deviceId || null,
+          full_name,
+          device,
           category,
-          severity: impact,
+          severity,
           title,
           description,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Load failed");
+      const text = await res.text();
+      console.log("TICKETS RES", res.status, res.headers.get("content-type"), text);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+      }
+
+      const data = JSON.parse(text);
+      console.log("ticket created:", data);
       router.push("/store/tickets");
-    } catch (err: any) {
-      setError(err.message || "Kaydedilemedi");
+    } catch (e: any) {
+      console.error("TICKET CREATE FAILED:", e);
+      setError(e?.message ?? "Load failed");
     }
   };
 

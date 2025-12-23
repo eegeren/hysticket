@@ -5,6 +5,9 @@ import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
   try {
+    console.log("POST /api/tickets hit");
+    console.log("env url exists?", !!process.env.SUPABASE_URL, "service key?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
     const cookieStore = await cookies();
     const token = cookieStore.get("hys_store")?.value;
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
