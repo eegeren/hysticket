@@ -1,0 +1,8 @@
+﻿node_modules
+.env
+__pycache__
+*.pyc
+uploads
+apps/api/.venv
+apps/web/.next
+apps/web/node_modules
