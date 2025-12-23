@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
-  // Legacy endpoint; forward users to the new login route
-  return NextResponse.redirect(new URL("/api/store/login", process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"));
+// Legacy endpoint; forward to the standard login route.
+export async function POST(req: Request) {
+  const target = new URL("/api/store/login", req.url);
+  return NextResponse.redirect(target);
 }
