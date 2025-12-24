@@ -36,22 +36,39 @@ export async function POST(req: Request) {
 
     const priority = impact === "SALES_STOPPED" ? "P1" : impact === "PARTIAL" ? "P2" : "P3";
 
-    const { data, error } = await supabaseServer
-      .from("tickets")
-      .insert([
-        {
-          store_id: storeId,
-          requester_name: full_name,
-          device_id,
-          category,
-          impact,
-          priority,
-          title,
-          description,
-        },
-      ])
-      .select("id")
-      .single();
+    const basePayload: Record<string, any> = {
+      store_id: storeId,
+      title,
+      description,
+      category,
+      impact,
+      priority,
+      requester_name: full_name,
+      full_name,
+      device_id,
+    };
+
+    const tryInsert = async (payload: Record<string, any>) => {
+      return supabaseServer.from("tickets").insert([payload]).select("id").single();
+    };
+
+    let payload = { ...basePayload };
+    let { data, error } = await tryInsert(payload);
+
+    if (error && error.message) {
+      // If a column is missing, drop it and retry (handles schema drift)
+      const msg = error.message.toLowerCase();
+      const dropKeys: string[] = [];
+      if (msg.includes("requester_name")) dropKeys.push("requester_name");
+      if (msg.includes("full_name")) dropKeys.push("full_name");
+      if (msg.includes("impact")) dropKeys.push("impact");
+      if (msg.includes("priority")) dropKeys.push("priority");
+      if (msg.includes("device_id")) dropKeys.push("device_id");
+      if (dropKeys.length > 0) {
+        for (const k of dropKeys) delete payload[k];
+        ({ data, error } = await tryInsert(payload));
+      }
+    }
 
     if (error || !data) return NextResponse.json({ error: error?.message || "Insert failed" }, { status: 500 });
 
