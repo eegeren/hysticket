@@ -1,6 +1,7 @@
 import { getToken, getAdminSecret } from "./auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// Always use same-origin API calls; ignore env to avoid leaking localhost/base URLs.
+const API_URL = "";
 
 type ApiOptions = RequestInit & { rawResponse?: boolean };
 
