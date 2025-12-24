@@ -7,6 +7,17 @@ type Overview = { totalTickets: number; topStores: { store_id: string; count: nu
 type StoreCategory = { store_id: string; category: string; count: number }[];
 type Timeline = { days: number; timeline: { day: string; count: number }[] };
 
+const categoryLabelMap: Record<string, string> = {
+  INTERNET_WAN: "İnternet / WAN",
+  LAN_WIFI: "LAN / Wi-Fi",
+  POS: "POS",
+  PRINTER_BARCODE: "Yazıcı / Barkod",
+  PC_TABLET: "PC / Tablet",
+  ACCOUNT_ACCESS: "Hesap Erişimi",
+  APP_SERVER: "Uygulama / Sunucu",
+  OTHER: "Diğer",
+};
+
 export default function AdminReportsPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [storeCats, setStoreCats] = useState<StoreCategory>([]);
@@ -26,11 +37,11 @@ export default function AdminReportsPage() {
     lines.push("");
     lines.push("=== Top Kategoriler ===");
     lines.push("Kategori;Adet");
-    overview.topCategories.forEach((c) => lines.push(`${c.category};${c.count}`));
+    overview.topCategories.forEach((c) => lines.push(`${categoryLabelMap[c.category] ?? c.category};${c.count}`));
     lines.push("");
     lines.push("=== Store x Category (Top 30) ===");
     lines.push("Mağaza;Kategori;Adet");
-    storeCats.slice(0, 30).forEach((r) => lines.push(`${r.store_id};${r.category};${r.count}`));
+    storeCats.slice(0, 30).forEach((r) => lines.push(`${r.store_id};${categoryLabelMap[r.category] ?? r.category};${r.count}`));
     lines.push("");
     lines.push("=== Timeline ===");
     lines.push("Gün;Adet");
@@ -131,10 +142,11 @@ export default function AdminReportsPage() {
             {overview.topCategories.map((c) => {
               const max = overview.topCategories[0]?.count || 1;
               const width = Math.max(10, Math.round((c.count / max) * 100));
+              const label = categoryLabelMap[c.category] ?? c.category;
               return (
                 <div key={c.category}>
                   <div className="flex justify-between text-sm text-slate-200">
-                    <span>{c.category}</span>
+                    <span>{label}</span>
                     <span className="text-slate-300">{c.count}</span>
                   </div>
                   <div className="mt-1 h-2 rounded bg-slate-800">
@@ -164,7 +176,7 @@ export default function AdminReportsPage() {
               {storeCats.slice(0, 30).map((row, idx) => (
                 <tr key={`${row.store_id}-${row.category}-${idx}`} className={idx % 2 ? "bg-slate-900/40" : ""}>
                   <td className="py-2 pr-4">{row.store_id}</td>
-                  <td className="py-2 pr-4">{row.category}</td>
+                  <td className="py-2 pr-4">{categoryLabelMap[row.category] ?? row.category}</td>
                   <td className="py-2 pr-4 text-slate-100 font-semibold">{row.count}</td>
                 </tr>
               ))}
