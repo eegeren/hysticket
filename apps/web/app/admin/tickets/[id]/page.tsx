@@ -147,6 +147,27 @@ export default function AdminTicketDetailPage() {
 
   const store = STORES.find((s) => s.id === ticket.store_id);
 
+  const onDelete = async () => {
+    const token = getAdminSecret();
+    if (!token || !ticketId) return;
+    if (!confirm("Ticket silinsin mi?")) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/tickets/${ticketId}`, {
+        method: "DELETE",
+        headers: { "X-Admin-Password": token },
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+      router.push("/admin/tickets");
+    } catch (e: any) {
+      setError(e?.message ?? "Silme başarısız.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -168,6 +189,13 @@ export default function AdminTicketDetailPage() {
         <div className="flex gap-2">
           <button className="rounded-xl border px-3 py-2" onClick={() => router.back()}>
             Geri
+          </button>
+          <button
+            className="rounded-xl border px-3 py-2 font-medium text-red-200 border-red-300/60 hover:bg-red-500/10 disabled:opacity-60"
+            disabled={saving}
+            onClick={onDelete}
+          >
+            Sil
           </button>
           <button
             className="rounded-xl border px-3 py-2 font-medium disabled:opacity-60"
