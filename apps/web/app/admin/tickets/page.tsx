@@ -53,7 +53,8 @@ export default function AdminTicketsListPage() {
   useEffect(() => {
     const token = getAdminSecret();
     if (!token) {
-      window.location.href = "/admin/login?next=/admin/tickets";
+      setLoading(false);
+      setError("Admin girişi gerekli.");
       return;
     }
 
@@ -80,9 +81,9 @@ export default function AdminTicketsListPage() {
     return (
       <div className="p-6 space-y-3">
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>
-        <button className="rounded-xl border px-3 py-2" onClick={() => (window.location.href = "/admin/login")}>
+        <Link className="rounded-xl border px-3 py-2 inline-block" href="/admin/login">
           Giriş ekranına git
-        </button>
+        </Link>
       </div>
     );
   }
