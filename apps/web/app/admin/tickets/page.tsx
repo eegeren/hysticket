@@ -94,6 +94,12 @@ export default function AdminTicketsListPage() {
           <h1 className="text-2xl font-semibold text-slate-100">Admin Ticketları</h1>
           <p className="text-sm text-slate-400">Son ticket kayıtları</p>
         </div>
+        <Link
+          href="/admin/reports"
+          className="rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-sm font-medium text-slate-100 hover:bg-slate-700/60 transition"
+        >
+          Raporlar
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-slate-900/30 backdrop-blur">
