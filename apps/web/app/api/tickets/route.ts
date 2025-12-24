@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const full_name = String(body.full_name || "").trim();
+    const full_name = String(body.full_name || body.requester_name || "").trim();
     const device_id = body.device ? String(body.device).trim() : null;
     const category = String(body.category || "").trim();
     const severityRaw = String(body.severity || body.impact || "").trim();
