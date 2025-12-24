@@ -69,6 +69,7 @@ export default function NewTicket() {
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           full_name,
           device,

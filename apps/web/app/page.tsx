@@ -53,6 +53,7 @@ export default function Home() {
     try {
       await apiFetch("/tickets", {
         method: "POST",
+        credentials: "include",
         body: JSON.stringify({
           title,
           description,
