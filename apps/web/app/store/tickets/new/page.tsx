@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "../../../../lib/api";
 import type { Category, Impact, Device } from "../../../../lib/types";
 import { STORES } from "@/lib/stores";
 
@@ -55,7 +54,8 @@ export default function NewTicket() {
       return;
     }
     setStoreSession(storeId).catch(() => {});
-    apiFetch<Device[]>(`/stores/${storeId}/devices`).then(setDevices).catch(() => setDevices([]));
+    // Cihaz listesi için backend endpoint yok; dropdown'ı boş tutuyoruz.
+    setDevices([]);
   }, [storeId]);
 
   const submit = async (e: React.FormEvent) => {

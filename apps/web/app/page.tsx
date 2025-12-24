@@ -39,11 +39,8 @@ export default function Home() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!storeId) {
-      setDevices([]);
-      return;
-    }
-    apiFetch<Device[]>(`/stores/${storeId}/devices`).then(setDevices).catch(() => setDevices([]));
+    // Cihaz listesi için API route yok; dropdown'ı boş tutuyoruz.
+    setDevices([]);
   }, [storeId]);
 
   const submit = async (e: React.FormEvent) => {
@@ -51,7 +48,7 @@ export default function Home() {
     setError(null);
     setSuccess(null);
     try {
-      await apiFetch("/tickets", {
+      await apiFetch("/api/tickets", {
         method: "POST",
         credentials: "include",
         body: JSON.stringify({
