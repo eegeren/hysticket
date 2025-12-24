@@ -11,6 +11,8 @@ type Priority = "P1" | "P2" | "P3" | "P4";
 type Ticket = {
   id: string;
   store_id: string;
+  requester_name?: string | null;
+  full_name?: string | null;
   title: string;
   description: string;
   category: string;
@@ -24,6 +26,32 @@ type Ticket = {
 
 const statuses: Status[] = ["OPEN", "IN_PROGRESS", "WAITING_STORE", "RESOLVED", "CLOSED"];
 const priorities: Priority[] = ["P1", "P2", "P3", "P4"];
+
+const statusLabelMap: Record<Status, string> = {
+  OPEN: "Açık",
+  IN_PROGRESS: "Kabul edildi",
+  WAITING_STORE: "Mağaza beklemede",
+  RESOLVED: "Çözüldü",
+  CLOSED: "Kapalı",
+};
+
+const categoryLabelMap: Record<string, string> = {
+  INTERNET_WAN: "İnternet / WAN",
+  LAN_WIFI: "LAN / Wi-Fi",
+  POS: "POS",
+  PRINTER_BARCODE: "Yazıcı / Barkod",
+  PC_TABLET: "PC / Tablet",
+  ACCOUNT_ACCESS: "Hesap Erişimi",
+  APP_SERVER: "Uygulama / Sunucu",
+  OTHER: "Diğer",
+};
+
+const priorityLabelMap: Record<Priority, string> = {
+  P1: "Öncelik P1",
+  P2: "Öncelik P2",
+  P3: "Öncelik P3",
+  P4: "Öncelik P4",
+};
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -56,6 +84,7 @@ export default function AdminTicketDetailPage() {
   const [assignedTo, setAssignedTo] = useState("");
   const [closeCode, setCloseCode] = useState("");
   const [resolutionNote, setResolutionNote] = useState("");
+  const [categoryLabel, setCategoryLabel] = useState<string>("");
 
   useEffect(() => {
     if (!ticketId) {
@@ -85,6 +114,7 @@ export default function AdminTicketDetailPage() {
         setAssignedTo(t.assigned_to ?? "");
         setCloseCode(t.close_code ?? "");
         setResolutionNote(t.resolution_note ?? "");
+        setCategoryLabel(categoryLabelMap[t.category] ?? t.category);
       } catch (e: any) {
         setError(e?.message ?? "Ticket yüklenemedi.");
       } finally {
@@ -178,10 +208,21 @@ export default function AdminTicketDetailPage() {
           </div>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
             <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-emerald-100">
-              Durum: {ticket.status}
+              Durum: {statusLabelMap[ticket.status] ?? ticket.status}
             </span>
             <span className="inline-flex items-center gap-2 rounded-lg border border-sky-300/40 bg-sky-400/10 px-3 py-1 text-sky-100">
-              Öncelik: {ticket.priority}
+              Öncelik: {priorityLabelMap[ticket.priority] ?? ticket.priority}
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-300/30 bg-slate-200/10 px-3 py-1 text-slate-100">
+              Kategori: {categoryLabel}
+            </span>
+            {(ticket.requester_name || ticket.full_name) && (
+              <span className="inline-flex items-center gap-2 rounded-lg border border-slate-300/30 bg-slate-200/10 px-3 py-1 text-slate-100">
+                Açan: {ticket.requester_name || ticket.full_name}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-300/30 bg-slate-200/10 px-3 py-1 text-slate-100">
+              Etki: {ticket.impact}
             </span>
           </div>
         </div>
@@ -218,7 +259,7 @@ export default function AdminTicketDetailPage() {
 
         <div className="rounded-2xl border p-4 space-y-4">
           <label className="text-sm block">
-            Status
+            Durum
             <select
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={status}
@@ -226,14 +267,14 @@ export default function AdminTicketDetailPage() {
             >
               {statuses.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {statusLabelMap[s] ?? s}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="text-sm block">
-            Priority
+            Öncelik
             <select
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={priority}
@@ -241,7 +282,7 @@ export default function AdminTicketDetailPage() {
             >
               {priorities.map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {priorityLabelMap[p] ?? p}
                 </option>
               ))}
             </select>
