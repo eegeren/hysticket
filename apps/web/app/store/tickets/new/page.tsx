@@ -71,6 +71,7 @@ export default function NewTicket() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
+          storeId,
           full_name,
           device,
           category,

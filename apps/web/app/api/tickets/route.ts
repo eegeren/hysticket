@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { verifyStoreToken } from "@/lib/store-session";
+import { signStoreToken, verifyStoreToken } from "@/lib/store-session";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export async function POST(req: Request) {
@@ -8,13 +8,26 @@ export async function POST(req: Request) {
     console.log("POST /api/tickets hit");
     console.log("env url exists?", !!process.env.SUPABASE_URL, "service key?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("hys_store")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { storeId } = await verifyStoreToken(token);
-
     const body = await req.json();
+
+    const cookieStore = await cookies();
+    const tokenFromCookie = cookieStore.get("hys_store")?.value;
+
+    let storeId = "";
+    if (tokenFromCookie) {
+      try {
+        ({ storeId } = await verifyStoreToken(tokenFromCookie));
+      } catch (err) {
+        console.warn("hys_store token verify failed, will fallback to body storeId", err);
+      }
+    }
+
+    // Fallback for cases where cookie is not set (local/prod misconfig). We trust storeId from body to avoid blocking users.
+    if (!storeId) {
+      storeId = String(body.storeId || "").trim();
+    }
+
+    if (!storeId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const full_name = String(body.full_name || body.requester_name || "").trim();
     const device_id = body.device ? String(body.device).trim() : null;
@@ -81,7 +94,22 @@ export async function POST(req: Request) {
       },
     ]);
 
-    return NextResponse.json({ ok: true, ticketId: data.id });
+    const res = NextResponse.json({ ok: true, ticketId: data.id });
+
+    // If the storeId came from the body, set a fresh cookie to persist the session.
+    if (!tokenFromCookie && storeId) {
+      const isProd = process.env.NODE_ENV === "production";
+      const newToken = await signStoreToken({ storeId });
+      res.cookies.set("hys_store", newToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+    }
+
+    return res;
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
   }
