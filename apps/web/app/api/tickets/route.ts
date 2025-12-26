@@ -22,9 +22,9 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fallback for cases where cookie is not set (local/prod misconfig). We trust storeId from body to avoid blocking users.
+    // Fallback for cases where cookie is not set (local/prod misconfig). Accept both camelCase and snake_case.
     if (!storeId) {
-      storeId = String(body.storeId || "").trim();
+      storeId = String(body.storeId || body.store_id || body.store || "").trim();
     }
 
     if (!storeId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
