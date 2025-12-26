@@ -9,38 +9,40 @@ export const runtime = "nodejs";
  * Telegram message sender (inline to avoid changing app structure).
  * Uses env vars:
  * - TELEGRAM_BOT_TOKEN
- * - TELEGRAM_CHAT_ID  (example: -5023082894)
+ * - TELEGRAM_CHAT_ID (example: -5023082894)
  */
 async function sendTelegramMessage(text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const chatIdRaw = process.env.TELEGRAM_CHAT_ID;
 
-  if (!token || !chatId) {
-    console.warn("Telegram env missing: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID");
+  if (!token || !chatIdRaw) {
+    console.warn("Telegram env missing");
+    return;
+  }
+
+  const chatId = Number(chatIdRaw);
+  if (!Number.isFinite(chatId)) {
+    console.error("Telegram chat id is not a number:", chatIdRaw);
     return;
   }
 
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-  try {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // HTML parse_mode ile daha okunur format
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
-    });
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      disable_web_page_preview: true,
+    }),
+  });
 
-    if (!resp.ok) {
-      const t = await resp.text().catch(() => "");
-      console.error("Telegram send failed:", resp.status, t);
-    }
-  } catch (err) {
-    console.error("Telegram send exception:", err);
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => "");
+    console.error("Telegram send failed:", resp.status, t);
+  } else {
+    console.log("Telegram sent OK");
   }
 }
 
@@ -139,7 +141,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error?.message || "Insert failed" }, { status: 500 });
     }
 
-    // audit log (non-blocking would be ideal, but keeping your structure)
+    // ---- TELEGRAM NOTIFICATION (WAIT FOR IT) ----
+    // We await this to avoid serverless runtime shutting down before the request completes.
+    const adminLink = `${
+      process.env.NEXT_PUBLIC_APP_URL || "https://hys-it-ticket.vercel.app"
+    }/admin/tickets/${data.id}`;
+
+    await sendTelegramMessage(
+      [
+        "Yeni Arıza Kaydı",
+        "",
+        `Mağaza: ${storeId}`,
+        `Bildiren: ${full_name}`,
+        `Kategori: ${category}`,
+        `Seviye: ${severityRaw}`,
+        `Etki: ${impact}`,
+        `Öncelik: ${priority}`,
+        device_id ? `Cihaz: ${device_id}` : "",
+        "",
+        `Başlık: ${title}`,
+        "",
+        `Açıklama: ${description}`,
+        "",
+        `Admin: ${adminLink}`,
+        `Ticket ID: ${data.id}`,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    );
+    // --------------------------------------------
+
+    // audit log
     await supabaseServer.from("audit_logs").insert([
       {
         store_id: storeId,
@@ -148,32 +180,6 @@ export async function POST(req: Request) {
         metadata: { ticketId: data.id },
       },
     ]);
-
-    // ---- TELEGRAM NOTIFICATION (non-blocking) ----
-    // Send after successful insert; do not fail the request if telegram fails.
-    const adminLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://hys-it-ticket.vercel.app"}/admin/tickets/${data.id}`;
-    void sendTelegramMessage(
-      [
-        `🆕 <b>Yeni Arıza Kaydı</b>`,
-        ``,
-        `🏬 <b>Mağaza:</b> ${storeId}`,
-        `👤 <b>Bildiren:</b> ${full_name}`,
-        `📂 <b>Kategori:</b> ${category}`,
-        `⚠️ <b>Seviye:</b> ${severityRaw}`,
-        `🎯 <b>Etki:</b> ${impact}`,
-        `🚨 <b>Öncelik:</b> ${priority}`,
-        device_id ? `💻 <b>Cihaz:</b> ${device_id}` : ``,
-        ``,
-        `📝 <b>Başlık:</b> ${title}`,
-        ``,
-        `📄 <b>Açıklama:</b> ${description}`,
-        ``,
-        `🔗 <b>Admin:</b> ${adminLink}`,
-      ]
-        .filter(Boolean)
-        .join("\n")
-    );
-    // --------------------------------------------
 
     const res = NextResponse.json({ ok: true, ticketId: data.id });
 
