@@ -8,12 +8,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "storeId required" }, { status: 400 });
   }
 
+  const isProd = process.env.NODE_ENV === "production";
   const token = await signStoreToken({ storeId });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set("hys_store", token, {
     httpOnly: true,
-    secure: true,
+    secure: isProd, // allow non-HTTPS in local dev
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
