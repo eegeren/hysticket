@@ -149,22 +149,22 @@ export async function POST(req: Request) {
 
     await sendTelegramMessage(
       [
-        "Yeni Arıza Kaydı",
+        "🆕 Yeni Arıza Kaydı",
         "",
-        `Mağaza: ${storeId}`,
-        `Bildiren: ${full_name}`,
-        `Kategori: ${category}`,
-        `Seviye: ${severityRaw}`,
-        `Etki: ${impact}`,
-        `Öncelik: ${priority}`,
-        device_id ? `Cihaz: ${device_id}` : "",
+        `🏬 Mağaza: ${storeId}`,
+        `👤 Bildiren: ${full_name}`,
+        `📂 Kategori: ${category}`,
+        `⚠️ Seviye: ${severityRaw}`,
+        `🎯 Etki: ${impact}`,
+        `🚨 Öncelik: ${priority}`,
+        device_id ? `💻 Cihaz: ${device_id}` : "",
         "",
-        `Başlık: ${title}`,
+         `📝 Başlık: ${title}`,
         "",
-        `Açıklama: ${description}`,
+        `📄 Açıklama: ${description}`,
         "",
-        `Admin: ${adminLink}`,
-        `Ticket ID: ${data.id}`,
+         `🔗 Admin: ${adminLink}`,
+        `🆔 Ticket ID: ${data.id}`,
       ]
         .filter(Boolean)
         .join("\n")
