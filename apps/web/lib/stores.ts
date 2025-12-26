@@ -16,7 +16,10 @@ export const STORES: StoreOption[] = [
   { id: "21", name: "Kemalpaşa HYS Newstyle" },
   { id: "22", name: "İnegöl HYS" },
   { id: "23", name: "Bandırma Wegarden" },
-  { id: "24", name: "Çanakkale Köroğlu" }, // listende 07 ile aynı isim; kod farklı
+  { id: "24", name: "Çanakkale Köroğlu" },  
   { id: "25", name: "Bandırma HYS Mobilya" },
   { id: "26", name: "Bursa Heyza" },
+  { id: "90", name: "Wehomy Koltuk Fabrikası" },
+  { id: "91", name: "Wehomy Sunta Fabrikası" },
+  { id: "92", name: "HYS Genel Merkez Ofis" },
 ];
