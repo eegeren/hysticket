@@ -9,6 +9,7 @@ export const STORES: StoreOption[] = [
   { id: "08", name: "Çanakkale HYS" },
   { id: "09", name: "Balıkesir Köroğlu" },
   { id: "10", name: "Bandırma HYS" },
+  { id: "13", name: "Çan HYS" },
   { id: "14", name: "Balıkesir HYS" },
   { id: "17", name: "Bursa HYS" },
   { id: "19", name: "Kemalpaşa HYS" },
