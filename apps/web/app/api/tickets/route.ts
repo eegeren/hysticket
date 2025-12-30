@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { signStoreToken, verifyStoreToken } from "@/lib/store-session";
 import { supabaseServer } from "@/lib/supabase-server";
+import { sendTicketEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 
