@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { supabaseServer } from "@/lib/supabase-server";
+import pool from "@/lib/db";
 import { verifyStoreToken } from "@/lib/store-session";
 
 export async function POST(req: Request) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         const verified = await verifyStoreToken(token);
         storeId = verified.storeId;
       } catch (err) {
-        // ignore token errors; will fail on missing storeId check below
+        // ignore
       }
     }
 
@@ -28,9 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "storeId, action, path required" }, { status: 400 });
     }
 
-    const { error } = await supabaseServer.from("audit_logs").insert([{ store_id: storeId, action, path, metadata }]);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await pool.query(
+      "INSERT INTO audit_logs (store_id, action, path, metadata) VALUES ($1, $2, $3, $4)",
+      [storeId, action, path, JSON.stringify(metadata)]
+    );
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {

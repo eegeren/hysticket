@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyStoreToken } from "@/lib/store-session";
-import { supabaseServer } from "@/lib/supabase-server";
+import pool from "@/lib/db";
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
@@ -18,19 +18,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { data, error } = await supabaseServer
-      .from("tickets")
-      .select("*")
-      .eq("id", id)
-      .eq("store_id", storeId)
-      .single();
+    const { rows } = await pool.query(
+      "SELECT * FROM tickets WHERE id = $1 AND store_id = $2",
+      [id, storeId]
+    );
 
-    if (error?.code === "PGRST116" || error?.details?.includes("Row not found")) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    return NextResponse.json(data);
+    if (rows.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(rows[0]);
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
   }

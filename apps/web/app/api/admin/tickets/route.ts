@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase-server";
+import pool from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -9,31 +9,27 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ error: "Supabase env vars missing" }, { status: 500 });
-  }
-
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get("status");
   const priorityFilter = searchParams.get("priority");
   const storeFilter = searchParams.get("store_id");
   const limit = Math.min(Number(searchParams.get("limit") || "200"), 500);
 
-  let query = supabaseServer
-    .from("tickets")
-    .select("id, store_id, title, category, impact, priority, status, created_at")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const conditions: string[] = [];
+  const values: any[] = [];
 
-  if (statusFilter) query = query.eq("status", statusFilter);
-  if (priorityFilter) query = query.eq("priority", priorityFilter);
-  if (storeFilter) query = query.eq("store_id", storeFilter);
+  if (statusFilter) { values.push(statusFilter); conditions.push(`status = $${values.length}`); }
+  if (priorityFilter) { values.push(priorityFilter); conditions.push(`priority = $${values.length}`); }
+  if (storeFilter) { values.push(storeFilter); conditions.push(`store_id = $${values.length}`); }
 
-  const { data, error } = await query;
+  values.push(limit);
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const sql = `SELECT id, store_id, title, category, impact, priority, status, created_at FROM tickets ${where} ORDER BY created_at DESC LIMIT $${values.length}`;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const { rows } = await pool.query(sql, values);
+    return NextResponse.json(rows);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
-
-  return NextResponse.json(data || []);
 }

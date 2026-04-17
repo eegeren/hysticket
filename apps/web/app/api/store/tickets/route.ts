@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyStoreToken } from "@/lib/store-session";
-import { supabaseServer } from "@/lib/supabase-server";
+import pool from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
@@ -18,15 +18,16 @@ export async function GET(req: Request) {
     }
     const statusFilter = url.searchParams.get("status_filter") || undefined;
 
-    const query = supabaseServer.from("tickets").select("*").eq("store_id", storeId).order("created_at", { ascending: false });
+    const values: any[] = [storeId];
+    let sql = "SELECT * FROM tickets WHERE store_id = $1";
     if (statusFilter) {
-      query.eq("status", statusFilter);
+      values.push(statusFilter);
+      sql += ` AND status = $${values.length}`;
     }
+    sql += " ORDER BY created_at DESC";
 
-    const { data, error } = await query;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    return NextResponse.json(data || []);
+    const { rows } = await pool.query(sql, values);
+    return NextResponse.json(rows);
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "unknown error" }, { status: 500 });
   }

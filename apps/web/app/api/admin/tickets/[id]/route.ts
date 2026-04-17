@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase-server";
+import pool from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -13,33 +13,30 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   }
 
   const body = await req.json();
-  const updates: Record<string, any> = {};
+  const setClauses: string[] = [];
+  const values: any[] = [];
+
   for (const field of allowedFields) {
     if (Object.prototype.hasOwnProperty.call(body, field)) {
-      updates[field] = body[field];
+      values.push(body[field]);
+      setClauses.push(`${field} = $${values.length}`);
     }
   }
 
-  if (Object.keys(updates).length === 0) {
+  if (setClauses.length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const ticketId = id;
-  const { data, error } = await supabaseServer
-    .from("tickets")
-    .update(updates)
-    .eq("id", ticketId)
-    .select("*")
-    .single();
+  values.push(id);
+  const sql = `UPDATE tickets SET ${setClauses.join(", ")} WHERE id = $${values.length} RETURNING *`;
 
-  if (error?.code === "PGRST116" || error?.details?.includes("Row not found")) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const { rows } = await pool.query(sql, values);
+    if (rows.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(rows[0]);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json(data);
 }
 
 export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -49,14 +46,11 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { error } = await supabaseServer.from("tickets").delete().eq("id", id);
-
-  if (error?.code === "PGRST116" || error?.details?.includes("Row not found")) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const { rowCount } = await pool.query("DELETE FROM tickets WHERE id = $1", [id]);
+    if (rowCount === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true });
 }
