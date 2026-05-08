@@ -40,6 +40,8 @@ const impactLabels: Record<string, string> = {
   INFO: "Bilgi",
 };
 
+const priorities = ["P1", "P2", "P3", "P4"] as const;
+
 const priorityColors: Record<string, string> = {
   P1: "bg-red-500/20 text-red-200 border-red-400/40",
   P2: "bg-orange-500/15 text-orange-300 border-orange-400/30",
@@ -53,6 +55,9 @@ const selectCls =
 export default function StoreTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [status, setStatus] = useState<string>("");
+  const [priority, setPriority] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [query, setQuery] = useState<string>("");
   const [storeId, setStoreId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +71,21 @@ export default function StoreTickets() {
     });
   };
 
-  const load = async (sf = status, stf = storeId) => {
+  const load = async (
+    sf = status,
+    stf = storeId,
+    pf = priority,
+    cf = category,
+    q = query
+  ) => {
     if (!stf) { setTickets([]); return; }
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
     if (sf) params.set("status_filter", sf);
+    if (pf) params.set("priority_filter", pf);
+    if (cf) params.set("category_filter", cf);
+    if (q.trim()) params.set("q", q.trim());
     const query = params.toString() ? `?${params}` : "";
     try {
       await setStoreSession(stf);
@@ -88,9 +102,9 @@ export default function StoreTickets() {
   };
 
   useEffect(() => {
-    load(status, storeId);
+    load(status, storeId, priority, category, query);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, storeId]);
+  }, [status, storeId, priority, category, query]);
 
   return (
     <div className="space-y-5">
@@ -129,9 +143,36 @@ export default function StoreTickets() {
             ))}
           </select>
         </div>
+        <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+          <span className="text-xs text-slate-400">Öncelik</span>
+          <select className={selectCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
+            <option value="">Hepsi</option>
+            {priorities.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+          <span className="text-xs text-slate-400">Kategori</span>
+          <select className={selectCls} value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">Hepsi</option>
+            {Object.entries(categoryLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1 flex-[2] min-w-[220px]">
+          <span className="text-xs text-slate-400">Arama</span>
+          <input
+            className={selectCls}
+            placeholder="Ticket ID, başlık, açıklama, cihaz..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
         <button
           className="btn btn-secondary text-sm h-10 px-4"
-          onClick={() => load(status, storeId)}
+          onClick={() => load(status, storeId, priority, category, query)}
           disabled={!storeId || loading}
         >
           {loading ? "Yükleniyor..." : "Listele"}

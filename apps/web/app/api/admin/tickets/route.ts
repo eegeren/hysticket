@@ -13,6 +13,8 @@ export async function GET(req: Request) {
   const statusFilter = searchParams.get("status");
   const priorityFilter = searchParams.get("priority");
   const storeFilter = searchParams.get("store_id");
+  const categoryFilter = searchParams.get("category");
+  const query = (searchParams.get("q") || "").trim();
   const limit = Math.min(Number(searchParams.get("limit") || "200"), 500);
 
   const conditions: string[] = [];
@@ -21,6 +23,12 @@ export async function GET(req: Request) {
   if (statusFilter) { values.push(statusFilter); conditions.push(`status = $${values.length}`); }
   if (priorityFilter) { values.push(priorityFilter); conditions.push(`priority = $${values.length}`); }
   if (storeFilter) { values.push(storeFilter); conditions.push(`store_id = $${values.length}`); }
+  if (categoryFilter) { values.push(categoryFilter); conditions.push(`category = $${values.length}`); }
+  if (query) {
+    values.push(`%${query}%`);
+    const idx = values.length;
+    conditions.push(`(id::text ILIKE $${idx} OR title ILIKE $${idx} OR COALESCE(description, '') ILIKE $${idx} OR COALESCE(device_id, '') ILIKE $${idx})`);
+  }
 
   values.push(limit);
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

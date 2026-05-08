@@ -58,6 +58,17 @@ const priorities: { value: Priority; label: string }[] = [
   { value: "P4", label: "P4 – Düşük" },
 ];
 
+const categories = [
+  { value: "INTERNET_WAN", label: "İnternet / WAN" },
+  { value: "LAN_WIFI", label: "LAN / Wi-Fi" },
+  { value: "POS", label: "POS" },
+  { value: "PRINTER_BARCODE", label: "Yazıcı / Barkod" },
+  { value: "PC_TABLET", label: "PC / Tablet" },
+  { value: "ACCOUNT_ACCESS", label: "Hesap Erişimi" },
+  { value: "APP_SERVER", label: "Uygulama / Sunucu" },
+  { value: "OTHER", label: "Diğer" },
+];
+
 const selectCls =
   "bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-accent transition";
 
@@ -77,8 +88,16 @@ export default function AdminTicketsListPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [query, setQuery] = useState("");
 
-  const load = async (sf = statusFilter, pf = priorityFilter, stf = storeFilter) => {
+  const load = async (
+    sf = statusFilter,
+    pf = priorityFilter,
+    stf = storeFilter,
+    cf = categoryFilter,
+    q = query
+  ) => {
     const token = getAdminSecret();
     if (!token) {
       router.replace("/admin/login");
@@ -91,6 +110,8 @@ export default function AdminTicketsListPage() {
       if (sf) params.set("status", sf);
       if (pf) params.set("priority", pf);
       if (stf) params.set("store_id", stf);
+      if (cf) params.set("category", cf);
+      if (q.trim()) params.set("q", q.trim());
       const qs = params.toString() ? `?${params}` : "";
       const data = await fetchJson<Ticket[]>(`/api/admin/tickets${qs}`, {
         headers: { "X-Admin-Password": token },
@@ -109,13 +130,15 @@ export default function AdminTicketsListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleFilter = () => load(statusFilter, priorityFilter, storeFilter);
+  const handleFilter = () => load(statusFilter, priorityFilter, storeFilter, categoryFilter, query);
 
   const handleReset = () => {
     setStatusFilter("");
     setPriorityFilter("");
     setStoreFilter("");
-    load("", "", "");
+    setCategoryFilter("");
+    setQuery("");
+    load("", "", "", "", "");
   };
 
   if (error) {
@@ -177,8 +200,29 @@ export default function AdminTicketsListPage() {
             ))}
           </select>
         </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-slate-400">Kategori</span>
+          <select className={selectCls} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <option value="">Hepsi</option>
+            {categories.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1 min-w-[220px]">
+          <span className="text-xs text-slate-400">Arama</span>
+          <input
+            className={selectCls}
+            placeholder="Ticket ID, başlık, açıklama, cihaz..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleFilter();
+            }}
+          />
+        </div>
         <button className="btn btn-primary text-sm h-9 px-4" onClick={handleFilter}>Filtrele</button>
-        {(statusFilter || priorityFilter || storeFilter) && (
+        {(statusFilter || priorityFilter || storeFilter || categoryFilter || query.trim()) && (
           <button className="btn btn-secondary text-sm h-9 px-4" onClick={handleReset}>Temizle</button>
         )}
       </div>
